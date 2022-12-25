@@ -15,7 +15,7 @@ from torchvision import datasets, transforms, models
 from torch.utils.data.dataloader import DataLoader
 from torch.autograd import Variable
 #from torchviz import make_dot
-from   tensorboard_logger import configure, log_value
+from torch.utils.tensorboard import SummaryWriter
 from matplotlib import pyplot as plt
 from matplotlib.gridspec import GridSpec
 import numpy as np
@@ -178,7 +178,8 @@ def train(epoch, loader):
     
     train_loss_per_epoch = train_loss.avg
     print("Epoch: {}/{};".format(epoch, 20), "########## Training loss: {}".format(train_loss_per_epoch))
-    log_value('train_loss', train_loss_per_epoch, epoch)  
+    writer.add_scalar('train_loss', train_loss_per_epoch, epoch)
+
 def test(epoch, loader):
 
     global learning_rate, start_time, batch_size_test, leak_mem
@@ -227,7 +228,7 @@ def test(epoch, loader):
 
         test_loss_per_epoch = test_loss.avg        
         print("Epoch: {}/{};".format(epoch, 20), "########## Test loss: {}".format(test_loss_per_epoch))
-        log_value('test_loss', test_loss_per_epoch, epoch)
+        writer.add_scalar('test_loss', test_loss_per_epoch, epoch)
         if correct>max_correct:
             max_correct = correct
             is_best = True          
@@ -298,7 +299,10 @@ if print_to_file:
 else:
     f = sys.stdout
 
-configure('RUNS/'+log_file)
+writer = SummaryWriter()
+
+
+
 
 normalize       = transforms.Normalize(mean = [0.5, 0.5, 0.5], std = [0.5, 0.5, 0.5])
 transform_train = transforms.Compose([
