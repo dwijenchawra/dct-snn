@@ -20,6 +20,8 @@ from matplotlib import pyplot as plt
 from matplotlib.gridspec import GridSpec
 import numpy as np
 import datetime
+
+from tqdm import tqdm
 #import pdb
 from spike_model_cifar import *
 
@@ -56,7 +58,7 @@ use_cuda = True
 torch.manual_seed(0)
 if torch.cuda.is_available() and use_cuda:
     print ("\n \t ------- Running on GPU -------")
-    #torch.cuda.set_device(int(sys.argv[1]))
+    # torch.cuda.set_device(0)
     torch.set_default_tensor_type('torch.cuda.FloatTensor')
 
 
@@ -125,7 +127,11 @@ def train(epoch, loader):
     current_time = start_time
     model.module.network_init(update_interval)
 
+    print(torch.cuda.is_available())
+
     for batch_idx, (data, target) in enumerate(loader):
+
+        print("Batch: {}/{};".format(batch_idx+1, math.ceil(num_train/batch_size)))
                
         if torch.cuda.is_available() and use_cuda:
             data, target = data.cuda(), target.cuda()
@@ -259,7 +265,7 @@ def test(epoch, loader):
 
     
 dataset             = 'CIFAR10' # {'CIFAR10', 'CIFAR100'}
-batch_size          = 16
+batch_size          = 256
 batch_size1          = 512
 batch_size_test          = 64
 timesteps           = 48 #64
@@ -271,9 +277,9 @@ reset_threshold     = 0.0
 default_threshold   = 1.0
 activation          = 'Linear' # {'Linear', 'STDB'}
 architecture        = 'VGG9'#{'VGG9','VGG11'}
-print_to_file       = True
+print_to_file       = False
 log_file            = 'snn_'+architecture.lower()+'_'+str(update_interval)+'_'+str(batch_size)+'_4avgpool_cf16_28'+'.log'
-pretrained          = True
+pretrained          = False
 
 # load pre-trained ANN if intend to train the SNN, change directory
 pretrained_state    = './vgg9_cifar10_ann_lr.1_.1by100_bs128_pixel_submit_ckpt.pth'
@@ -344,9 +350,9 @@ elif dataset == 'IMAGENET':
                         ])) 
 
 
-train_loader    = DataLoader(trainset, batch_size=batch_size, shuffle=True)
-train_loader1    = DataLoader(trainset, batch_size=batch_size1, shuffle=True)
-test_loader     = DataLoader(testset, batch_size=batch_size_test, shuffle=False)
+train_loader    = DataLoader(trainset, batch_size=batch_size, shuffle=True, generator=torch.Generator(device='cuda'))
+train_loader1    = DataLoader(trainset, batch_size=batch_size1, shuffle=True, generator=torch.Generator(device='cuda'))
+test_loader     = DataLoader(testset, batch_size=batch_size_test, shuffle=False, generator=torch.Generator(device='cuda'))
 
 if architecture[0:3].lower() == 'vgg':
         model = VGG_SNN_STDB_lin(vgg_name = architecture, activation = activation, labels=labels, timesteps=timesteps, leak_mem=leak_mem)
