@@ -1,3 +1,5 @@
 cifar_data
 IMDB Dataset.csv
 IMDB Dataset.csv.zip
+runs/*
+__pycache__/*
